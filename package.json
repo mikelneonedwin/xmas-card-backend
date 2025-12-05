@@ -1,0 +1,26 @@
+{
+  "name": "xmas-card-backend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "tsc",
+    "dev": "tsx --watch index.ts",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.8",
+    "cloudinary": "^2.8.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.6.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.21.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
