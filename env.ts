@@ -4,9 +4,8 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    FIREBASE_CLIENT_EMAIL: z.email(),
-    FIREBASE_PRIVATE_KEY: z.string().min(1),
-    FIREBASE_PROJECT_ID: z.string().min(1),
+    SUPABASE_URL: z.url(),
+    SUPABASE_PUBLISHABLE_DEFAULT_KEY: z.string().min(1),
     CLOUDINARY_CLOUD_NAME: z.string().min(1),
     CLOUDINARY_API_KEY: z.string().min(1),
     CLOUDINARY_SECRET: z.string().min(1),
