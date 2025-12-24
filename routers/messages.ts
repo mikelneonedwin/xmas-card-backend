@@ -1,15 +1,15 @@
 import { PASSWORD_HASH_SALT } from "@/constants";
-import { requireAuth } from "@/lib/auth";
 import {
   addReply,
+  createMagicLink,
   createMessage,
   getAnalytics,
   getMessageBySlug,
-  createMagicLink,
+  getValidMagicLinks,
   logOpen,
   markMagicLinkUsed,
-  getValidMagicLinks,
 } from "@/db";
+import { requireAuth } from "@/lib/auth";
 import {
   createMessageSchema,
   openMessageSchema,
@@ -49,14 +49,14 @@ router.post("/", multerUpload.single("file"), async (req, res) => {
       : uploadToCloudinary(
           req.file!.buffer,
           req.file!.filename,
-          req.file!.mimetype
+          req.file!.mimetype,
         )
           .then((videoUrl) =>
             createMessage(senderId, {
               ...form,
               password: hashedPassword,
               videoUrl,
-            })
+            }),
           )
           .catch((error) => {
             console.error("Error uploading card video:", error);
@@ -66,7 +66,7 @@ router.post("/", multerUpload.single("file"), async (req, res) => {
                 error instanceof Error
                   ? error
                   : new Error(
-                      "Unable to upload video card. Please try again later"
+                      "Unable to upload video card. Please try again later",
                     ),
             };
           }));
@@ -96,10 +96,28 @@ router.post("/", multerUpload.single("file"), async (req, res) => {
 
 router.get("/:slug/exists", async (req, res) => {
   const { slug } = req.params;
-  const message = await getMessageBySlug(slug!);
-  return res.json({
+
+  const { error, data } = await getMessageBySlug(slug);
+
+  if (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+
+  if (!data) {
+    return res.status(404).json({
+      success: false,
+      exists: false,
+      message: "Slug not found",
+    });
+  }
+
+  return res.status(200).json({
     success: true,
-    exists: Boolean(message.data),
+    exists: true,
+    password_hint: data.password_hint,
   });
 });
 
@@ -285,7 +303,7 @@ router.post("/:slug/magic", requireAuth, async (req, res) => {
     const { data: magicLink, error: insertError } = await createMagicLink(
       message.id!,
       tokenHash,
-      expiresAt
+      expiresAt,
     );
     if (insertError) throw insertError;
 
@@ -341,7 +359,7 @@ router.get("/magic/:token", async (req, res) => {
 
     // Return message
     const { data: message, error: messageError } = await getMessageBySlug(
-      validLink.message_id
+      validLink.message_id,
     );
     if (!message || messageError)
       return res
